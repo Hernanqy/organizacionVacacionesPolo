@@ -34,17 +34,18 @@ export default function Actividades({ actividades, setActividades, extras }) {
   }
 
   return (
-    <section className="seccion-infografia">
-      <header className="seccion-header acciones">
+    <section className="seccion-infografia actividades-section">
+      <div className="barra-accion-superior">
         <div>
-          <span>Polo La Máxima</span>
-          <h2>Actividades</h2>
+          <span>Actividades cargadas</span>
+          <strong>{actividades.length}</strong>
         </div>
 
-        <button className="boton-infografia azul" onClick={agregarActividad}>
-          + Nueva
+        <button className="boton-nueva-actividad" onClick={agregarActividad}>
+          <span>+</span>
+          Nueva actividad
         </button>
-      </header>
+      </div>
 
       <div className="cards-grid">
         {actividades.map((actividad, index) => (

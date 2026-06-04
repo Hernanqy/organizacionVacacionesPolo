@@ -2148,3 +2148,78 @@ textarea {
     text-align: center;
   }
 }
+
+/* Botón visible para nueva actividad */
+
+.barra-accion-superior {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 22px;
+  padding: 18px;
+  border-radius: 30px;
+  background: white;
+  box-shadow: 0 18px 42px rgba(0,0,0,.10);
+}
+
+.barra-accion-superior div {
+  display: grid;
+  gap: 4px;
+}
+
+.barra-accion-superior span {
+  color: #66736c;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.barra-accion-superior strong {
+  font-size: 42px;
+  line-height: .85;
+  letter-spacing: -.08em;
+  font-weight: 1000;
+  color: #1d4e9f;
+}
+
+.boton-nueva-actividad {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 999px;
+  padding: 15px 22px;
+  color: white;
+  font-weight: 1000;
+  background: linear-gradient(135deg, #3a86ff, #1d4e9f);
+  box-shadow: 0 16px 32px rgba(29, 78, 159, .22);
+}
+
+.boton-nueva-actividad span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: white;
+  color: #1d4e9f;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 1000;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@media (max-width: 620px) {
+  .barra-accion-superior {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .boton-nueva-actividad {
+    justify-content: center;
+  }
+}
