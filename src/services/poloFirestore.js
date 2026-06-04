@@ -1,0 +1,37 @@
+﻿import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore"
+import { db } from "./firebase"
+
+const POLO_DOC_PATH = ["polo", "vacaciones-invierno-2026"]
+
+export function escucharOrganizacion(callback, onError) {
+  const ref = doc(db, ...POLO_DOC_PATH)
+
+  return onSnapshot(
+    ref,
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        callback(null)
+        return
+      }
+
+      callback(snapshot.data())
+    },
+    (error) => {
+      console.error("Error escuchando Firestore:", error)
+      if (onError) onError(error)
+    }
+  )
+}
+
+export async function guardarOrganizacion(datos) {
+  const ref = doc(db, ...POLO_DOC_PATH)
+
+  await setDoc(
+    ref,
+    {
+      ...datos,
+      actualizado: serverTimestamp()
+    },
+    { merge: true }
+  )
+}

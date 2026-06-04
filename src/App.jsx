@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react"
+﻿import { useEffect, useRef, useState } from "react"
 import "./styles/app.css"
 
 import MenuPrincipal from "./components/MenuPrincipal"
@@ -7,9 +7,14 @@ import ResumenDiario from "./components/ResumenDiario"
 
 import { actividadesBase } from "./data/actividadesBase"
 import { leerLS, guardarLS } from "./utils/storage"
+import {
+  escucharOrganizacion,
+  guardarOrganizacion
+} from "./services/poloFirestore"
 
 export default function App() {
   const [vista, setVista] = useState("resumen")
+  const [estadoSync, setEstadoSync] = useState("Conectando...")
 
   const [disponibilidad, setDisponibilidad] = useState(() =>
     leerLS("polo-disponibilidad", {})
@@ -27,6 +32,43 @@ export default function App() {
     leerLS("polo-extras", [])
   )
 
+  const datosCargados = useRef(false)
+  const evitandoEcoRemoto = useRef(false)
+  const primerGuardado = useRef(true)
+
+  useEffect(() => {
+    const cancelarEscucha = escucharOrganizacion(
+      (datosRemotos) => {
+        evitandoEcoRemoto.current = true
+
+        if (!datosRemotos) {
+          datosCargados.current = true
+          setEstadoSync("Listo")
+          evitandoEcoRemoto.current = false
+          return
+        }
+
+        setDisponibilidad(datosRemotos.disponibilidad || {})
+        setActividades(datosRemotos.actividades || actividadesBase)
+        setGuardias(datosRemotos.guardias || {})
+        setExtras(datosRemotos.extras || [])
+
+        datosCargados.current = true
+        setEstadoSync("Sincronizado")
+
+        setTimeout(() => {
+          evitandoEcoRemoto.current = false
+        }, 250)
+      },
+      () => {
+        datosCargados.current = true
+        setEstadoSync("Sin conexión")
+      }
+    )
+
+    return () => cancelarEscucha()
+  }, [])
+
   useEffect(() => {
     guardarLS("polo-disponibilidad", disponibilidad)
   }, [disponibilidad])
@@ -42,6 +84,54 @@ export default function App() {
   useEffect(() => {
     guardarLS("polo-extras", extras)
   }, [extras])
+
+  useEffect(() => {
+    if (!datosCargados.current) return
+    if (evitandoEcoRemoto.current) return
+
+    if (primerGuardado.current) {
+      primerGuardado.current = false
+      return
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        setEstadoSync("Guardando...")
+
+        await guardarOrganizacion({
+          disponibilidad,
+          actividades,
+          guardias,
+          extras
+        })
+
+        setEstadoSync("Guardado")
+      } catch (error) {
+        console.error(error)
+        setEstadoSync("Error")
+      }
+    }, 700)
+
+    return () => clearTimeout(timeout)
+  }, [disponibilidad, actividades, guardias, extras])
+
+  async function guardarAhora() {
+    try {
+      setEstadoSync("Guardando...")
+
+      await guardarOrganizacion({
+        disponibilidad,
+        actividades,
+        guardias,
+        extras
+      })
+
+      setEstadoSync("Guardado")
+    } catch (error) {
+      console.error(error)
+      setEstadoSync("Error")
+    }
+  }
 
   function exportarDatos() {
     const datos = {
@@ -73,6 +163,12 @@ export default function App() {
         </div>
 
         <div className="hero-actions">
+          <span className="sync-pill">{estadoSync}</span>
+
+          <button className="boton-secundario" onClick={guardarAhora}>
+            Guardar
+          </button>
+
           <button className="boton-secundario" onClick={exportarDatos}>
             Exportar
           </button>
