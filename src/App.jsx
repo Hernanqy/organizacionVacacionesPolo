@@ -14,7 +14,7 @@ import {
 
 export default function App() {
   const [vista, setVista] = useState("resumen")
-  const [estadoSync, setEstadoSync] = useState("Listo")
+  const [estadoSync, setEstadoSync] = useState("")
 
   const [disponibilidad, setDisponibilidad] = useState(() =>
     leerLS("polo-disponibilidad", {})
@@ -62,50 +62,44 @@ export default function App() {
     guardarLS("polo-extras", datos.extras || [])
   }
 
-  async function actualizarDesdeFirebase({ silencioso = false, forzar = false } = {}) {
-    if (!forzar && vista !== "resumen") return
+  async function actualizarAutomaticamente() {
+    if (vista !== "resumen") return
 
     try {
-      if (!silencioso) {
-        setEstadoSync("Actualizando...")
-      }
-
       const datos = await cargarOrganizacion()
-
-      if (!datos) {
-        if (!silencioso) setEstadoSync("Sin datos")
-        return
+      if (datos) {
+        aplicarDatosFirebase(datos)
       }
-
-      aplicarDatosFirebase(datos)
-
-      setEstadoSync(silencioso ? "Actualizado" : "Sincronizado")
     } catch (error) {
-      console.error(error)
-      if (!silencioso) {
-        setEstadoSync("Error al actualizar")
-      }
+      console.error("No se pudo actualizar automáticamente:", error)
     }
   }
 
-  async function actualizarManual() {
-    const confirmar = confirm(
-      "Esto traerá la última versión guardada en Firebase. Si tenés cambios sin guardar, podrían reemplazarse. ¿Continuar?"
-    )
+  useEffect(() => {
+    async function actualizarAlAbrir() {
+      try {
+        const datos = await cargarOrganizacion()
+        if (datos) {
+          aplicarDatosFirebase(datos)
+        }
+      } catch (error) {
+        console.error("No se pudo actualizar al abrir:", error)
+      }
+    }
 
-    if (!confirmar) return
-
-    await actualizarDesdeFirebase({ silencioso: false, forzar: true })
-  }
+    actualizarAlAbrir()
+  }, [])
 
   useEffect(() => {
-    actualizarDesdeFirebase({ silencioso: true, forzar: true })
-  }, [])
+    if (vista === "resumen") {
+      actualizarAutomaticamente()
+    }
+  }, [vista])
 
   useEffect(() => {
     const intervalo = setInterval(() => {
       if (vista === "resumen" && document.visibilityState === "visible") {
-        actualizarDesdeFirebase({ silencioso: true })
+        actualizarAutomaticamente()
       }
     }, 60000)
 
@@ -115,19 +109,19 @@ export default function App() {
   useEffect(() => {
     function alVolverVisible() {
       if (document.visibilityState === "visible" && vista === "resumen") {
-        actualizarDesdeFirebase({ silencioso: true })
+        actualizarAutomaticamente()
       }
     }
 
     function alVolverAFoco() {
       if (vista === "resumen") {
-        actualizarDesdeFirebase({ silencioso: true })
+        actualizarAutomaticamente()
       }
     }
 
     function alVolverDesdeCelular() {
       if (vista === "resumen") {
-        actualizarDesdeFirebase({ silencioso: true })
+        actualizarAutomaticamente()
       }
     }
 
@@ -154,9 +148,13 @@ export default function App() {
       })
 
       setEstadoSync("Guardado")
+
+      setTimeout(() => {
+        setEstadoSync("")
+      }, 1800)
     } catch (error) {
       console.error(error)
-      setEstadoSync("Error")
+      setEstadoSync("Error al guardar")
     }
   }
 
@@ -190,11 +188,7 @@ export default function App() {
         </div>
 
         <div className="hero-actions">
-          <span className="sync-pill">{estadoSync}</span>
-
-          <button className="boton-secundario" onClick={actualizarManual}>
-            Actualizar
-          </button>
+          {estadoSync && <span className="sync-pill">{estadoSync}</span>}
 
           <button className="boton-secundario" onClick={guardarAhora}>
             Guardar
