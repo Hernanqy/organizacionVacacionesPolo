@@ -2223,3 +2223,115 @@ textarea {
     justify-content: center;
   }
 }
+
+/* =========================================================
+   AJUSTE CRONOGRAMA EN CELULAR
+   ========================================================= */
+
+@media (max-width: 620px) {
+  .cronograma-infografia-lista {
+    padding-left: 0 !important;
+    gap: 18px !important;
+  }
+
+  .cronograma-barra {
+    display: grid !important;
+    grid-template-columns: 74px 1fr !important;
+    min-height: 120px;
+    width: 100%;
+    border-radius: 30px !important;
+    padding: 18px !important;
+    overflow: hidden;
+  }
+
+  .cronograma-barra::before {
+    display: none;
+  }
+
+  .cronograma-barra::after {
+    content: "";
+    position: absolute;
+    display: block;
+    width: 130px;
+    height: 130px;
+    left: -42px;
+    top: -34px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.22);
+    z-index: 0;
+  }
+
+  .cronograma-circulo {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    z-index: 2;
+    width: 62px;
+    height: 62px;
+    font-size: 25px;
+    box-shadow:
+      0 12px 24px rgba(0,0,0,.16),
+      inset 0 0 0 2px rgba(0,0,0,.04);
+  }
+
+  .cronograma-numero {
+    position: absolute !important;
+    right: 18px !important;
+    top: 14px !important;
+    z-index: 2;
+    font-size: 44px !important;
+    line-height: .9;
+    opacity: .95;
+  }
+
+  .cronograma-texto {
+    position: relative;
+    z-index: 2;
+    align-content: center;
+    padding-right: 58px;
+  }
+
+  .cronograma-texto strong {
+    font-size: 24px !important;
+    line-height: .95;
+  }
+
+  .cronograma-texto small {
+    font-size: 12px !important;
+    line-height: 1.25;
+  }
+}
+
+@media (max-width: 390px) {
+  .cronograma-barra {
+    grid-template-columns: 62px 1fr !important;
+    padding: 16px !important;
+    min-height: 112px;
+  }
+
+  .cronograma-circulo {
+    width: 54px;
+    height: 54px;
+    font-size: 22px;
+  }
+
+  .cronograma-numero {
+    right: 14px !important;
+    top: 12px !important;
+    font-size: 36px !important;
+  }
+
+  .cronograma-texto {
+    padding-right: 44px;
+  }
+
+  .cronograma-texto strong {
+    font-size: 21px !important;
+  }
+
+  .cronograma-texto small {
+    display: block !important;
+    font-size: 11px !important;
+  }
+}

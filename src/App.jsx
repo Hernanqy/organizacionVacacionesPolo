@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react"
+﻿import { useEffect, useState } from "react"
 import "./styles/app.css"
 
 import MenuPrincipal from "./components/MenuPrincipal"
@@ -8,13 +8,13 @@ import ResumenDiario from "./components/ResumenDiario"
 import { actividadesBase } from "./data/actividadesBase"
 import { leerLS, guardarLS } from "./utils/storage"
 import {
-  escucharOrganizacion,
+  cargarOrganizacion,
   guardarOrganizacion
 } from "./services/poloFirestore"
 
 export default function App() {
   const [vista, setVista] = useState("resumen")
-  const [estadoSync, setEstadoSync] = useState("Conectando...")
+  const [estadoSync, setEstadoSync] = useState("Listo")
 
   const [disponibilidad, setDisponibilidad] = useState(() =>
     leerLS("polo-disponibilidad", {})
@@ -32,43 +32,6 @@ export default function App() {
     leerLS("polo-extras", [])
   )
 
-  const datosCargados = useRef(false)
-  const evitandoEcoRemoto = useRef(false)
-  const primerGuardado = useRef(true)
-
-  useEffect(() => {
-    const cancelarEscucha = escucharOrganizacion(
-      (datosRemotos) => {
-        evitandoEcoRemoto.current = true
-
-        if (!datosRemotos) {
-          datosCargados.current = true
-          setEstadoSync("Listo")
-          evitandoEcoRemoto.current = false
-          return
-        }
-
-        setDisponibilidad(datosRemotos.disponibilidad || {})
-        setActividades(datosRemotos.actividades || actividadesBase)
-        setGuardias(datosRemotos.guardias || {})
-        setExtras(datosRemotos.extras || [])
-
-        datosCargados.current = true
-        setEstadoSync("Sincronizado")
-
-        setTimeout(() => {
-          evitandoEcoRemoto.current = false
-        }, 250)
-      },
-      () => {
-        datosCargados.current = true
-        setEstadoSync("Sin conexión")
-      }
-    )
-
-    return () => cancelarEscucha()
-  }, [])
-
   useEffect(() => {
     guardarLS("polo-disponibilidad", disponibilidad)
   }, [disponibilidad])
@@ -85,35 +48,39 @@ export default function App() {
     guardarLS("polo-extras", extras)
   }, [extras])
 
-  useEffect(() => {
-    if (!datosCargados.current) return
-    if (evitandoEcoRemoto.current) return
+  async function actualizarDesdeFirebase() {
+    const confirmar = confirm(
+      "Esto traerá la última versión guardada en Firebase. Si tenés cambios sin guardar, podrían reemplazarse. ¿Continuar?"
+    )
 
-    if (primerGuardado.current) {
-      primerGuardado.current = false
-      return
-    }
+    if (!confirmar) return
 
-    const timeout = setTimeout(async () => {
-      try {
-        setEstadoSync("Guardando...")
+    try {
+      setEstadoSync("Actualizando...")
 
-        await guardarOrganizacion({
-          disponibilidad,
-          actividades,
-          guardias,
-          extras
-        })
+      const datos = await cargarOrganizacion()
 
-        setEstadoSync("Guardado")
-      } catch (error) {
-        console.error(error)
-        setEstadoSync("Error")
+      if (!datos) {
+        setEstadoSync("Sin datos")
+        return
       }
-    }, 700)
 
-    return () => clearTimeout(timeout)
-  }, [disponibilidad, actividades, guardias, extras])
+      setDisponibilidad(datos.disponibilidad || {})
+      setActividades(datos.actividades || actividadesBase)
+      setGuardias(datos.guardias || {})
+      setExtras(datos.extras || [])
+
+      guardarLS("polo-disponibilidad", datos.disponibilidad || {})
+      guardarLS("polo-actividades", datos.actividades || actividadesBase)
+      guardarLS("polo-guardias", datos.guardias || {})
+      guardarLS("polo-extras", datos.extras || [])
+
+      setEstadoSync("Actualizado")
+    } catch (error) {
+      console.error(error)
+      setEstadoSync("Error al actualizar")
+    }
+  }
 
   async function guardarAhora() {
     try {
@@ -164,6 +131,10 @@ export default function App() {
 
         <div className="hero-actions">
           <span className="sync-pill">{estadoSync}</span>
+
+          <button className="boton-secundario" onClick={actualizarDesdeFirebase}>
+            Actualizar
+          </button>
 
           <button className="boton-secundario" onClick={guardarAhora}>
             Guardar
