@@ -64,22 +64,6 @@ export default function App() {
     URL.revokeObjectURL(url)
   }
 
-  function borrarTodo() {
-    const confirmar = confirm("¿Borrar toda la información cargada?")
-    if (!confirmar) return
-
-    localStorage.removeItem("polo-disponibilidad")
-    localStorage.removeItem("polo-actividades")
-    localStorage.removeItem("polo-guardias")
-    localStorage.removeItem("polo-extras")
-
-    setDisponibilidad({})
-    setActividades(actividadesBase)
-    setGuardias({})
-    setExtras([])
-    setVista("resumen")
-  }
-
   return (
     <main className="app">
       <header className="hero hero-compacto">
@@ -91,9 +75,6 @@ export default function App() {
         <div className="hero-actions">
           <button className="boton-secundario" onClick={exportarDatos}>
             Exportar
-          </button>
-          <button className="boton-peligro" onClick={borrarTodo}>
-            Borrar
           </button>
         </div>
       </header>
