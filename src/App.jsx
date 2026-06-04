@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react"
+﻿import { useEffect, useRef, useState } from "react"
 import "./styles/app.css"
 
 import MenuPrincipal from "./components/MenuPrincipal"
@@ -32,6 +32,10 @@ export default function App() {
     leerLS("polo-extras", [])
   )
 
+  const cargaInicialLista = useRef(false)
+  const aplicandoDatosFirebase = useRef(false)
+  const temporizadorGuardado = useRef(null)
+
   useEffect(() => {
     guardarLS("polo-disponibilidad", disponibilidad)
   }, [disponibilidad])
@@ -51,6 +55,8 @@ export default function App() {
   function aplicarDatosFirebase(datos) {
     if (!datos) return
 
+    aplicandoDatosFirebase.current = true
+
     setDisponibilidad(datos.disponibilidad || {})
     setActividades(datos.actividades || actividadesBase)
     setGuardias(datos.guardias || {})
@@ -60,6 +66,10 @@ export default function App() {
     guardarLS("polo-actividades", datos.actividades || actividadesBase)
     guardarLS("polo-guardias", datos.guardias || {})
     guardarLS("polo-extras", datos.extras || [])
+
+    setTimeout(() => {
+      aplicandoDatosFirebase.current = false
+    }, 500)
   }
 
   async function actualizarAutomaticamente() {
@@ -67,6 +77,7 @@ export default function App() {
 
     try {
       const datos = await cargarOrganizacion()
+
       if (datos) {
         aplicarDatosFirebase(datos)
       }
@@ -79,11 +90,16 @@ export default function App() {
     async function actualizarAlAbrir() {
       try {
         const datos = await cargarOrganizacion()
+
         if (datos) {
           aplicarDatosFirebase(datos)
         }
       } catch (error) {
         console.error("No se pudo actualizar al abrir:", error)
+      } finally {
+        setTimeout(() => {
+          cargaInicialLista.current = true
+        }, 700)
       }
     }
 
@@ -136,27 +152,44 @@ export default function App() {
     }
   }, [vista])
 
-  async function guardarAhora() {
-    try {
-      setEstadoSync("Guardando...")
+  useEffect(() => {
+    if (!cargaInicialLista.current) return
+    if (aplicandoDatosFirebase.current) return
 
-      await guardarOrganizacion({
-        disponibilidad,
-        actividades,
-        guardias,
-        extras
-      })
+    setEstadoSync("Cambios sin guardar")
 
-      setEstadoSync("Guardado")
-
-      setTimeout(() => {
-        setEstadoSync("")
-      }, 1800)
-    } catch (error) {
-      console.error(error)
-      setEstadoSync("Error al guardar")
+    if (temporizadorGuardado.current) {
+      clearTimeout(temporizadorGuardado.current)
     }
-  }
+
+    temporizadorGuardado.current = setTimeout(async () => {
+      try {
+        setEstadoSync("Guardando...")
+
+        await guardarOrganizacion({
+          disponibilidad,
+          actividades,
+          guardias,
+          extras
+        })
+
+        setEstadoSync("Guardado automático")
+
+        setTimeout(() => {
+          setEstadoSync("")
+        }, 1800)
+      } catch (error) {
+        console.error(error)
+        setEstadoSync("Error al guardar")
+      }
+    }, 2000)
+
+    return () => {
+      if (temporizadorGuardado.current) {
+        clearTimeout(temporizadorGuardado.current)
+      }
+    }
+  }, [disponibilidad, actividades, guardias, extras])
 
   function exportarDatos() {
     const datos = {
@@ -189,10 +222,6 @@ export default function App() {
 
         <div className="hero-actions">
           {estadoSync && <span className="sync-pill">{estadoSync}</span>}
-
-          <button className="boton-secundario" onClick={guardarAhora}>
-            Guardar
-          </button>
 
           <button className="boton-secundario" onClick={exportarDatos}>
             Exportar
