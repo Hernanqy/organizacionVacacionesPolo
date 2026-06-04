@@ -71,6 +71,7 @@ export default function Organizacion({
           <Disponibilidad
             disponibilidad={disponibilidad}
             setDisponibilidad={setDisponibilidad}
+            extras={extras}
           />
         )}
       </div>

@@ -24,6 +24,12 @@ export default function ResumenDiario({ actividades, guardias }) {
 
   const fecha = fechas.find((item) => item.id === fechaActiva)
 
+  function obtenerAgentes(actividad) {
+    if (Array.isArray(actividad.agentes)) return actividad.agentes
+    if (actividad.apoyo) return [actividad.apoyo]
+    return []
+  }
+
   if (!fechaActiva) {
     return (
       <section className="cronograma-infografia-page">
@@ -111,25 +117,39 @@ export default function ResumenDiario({ actividades, guardias }) {
             <div className="cronograma-vacio">Sin actividades cargadas</div>
           ) : (
             <div className="cronograma-agenda">
-              {actividadesDelDia.map((actividad) => (
-                <article key={actividad.id} className="cronograma-actividad">
-                  <div className="cronograma-hora">
-                    {actividad.horario || "--:--"}
-                  </div>
+              {actividadesDelDia.map((actividad) => {
+                const agentesActividad = obtenerAgentes(actividad)
 
-                  <div>
-                    <h4>{actividad.titulo || "Actividad sin título"}</h4>
-
-                    <div className="cronograma-tags">
-                      <span>{actividad.espacio || "Sin lugar"}</span>
-                      {actividad.responsable && <span>{actividad.responsable}</span>}
-                      {actividad.apoyo && <span>{actividad.apoyo}</span>}
+                return (
+                  <article key={actividad.id} className="cronograma-actividad">
+                    <div className="cronograma-hora">
+                      {actividad.horario || "--:--"}
                     </div>
 
-                    {actividad.observaciones && <p>{actividad.observaciones}</p>}
-                  </div>
-                </article>
-              ))}
+                    <div>
+                      <h4>{actividad.titulo || "Actividad sin título"}</h4>
+
+                      <div className="cronograma-tags">
+                        <span>{actividad.espacio || "Sin lugar"}</span>
+
+                        {actividad.espacioDetalle && (
+                          <span>{actividad.espacioDetalle}</span>
+                        )}
+
+                        {actividad.responsable && (
+                          <span>Resp. {actividad.responsable}</span>
+                        )}
+
+                        {agentesActividad.map((agente) => (
+                          <span key={agente}>{agente}</span>
+                        ))}
+                      </div>
+
+                      {actividad.observaciones && <p>{actividad.observaciones}</p>}
+                    </div>
+                  </article>
+                )
+              })}
             </div>
           )}
         </section>

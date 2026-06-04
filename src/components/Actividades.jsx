@@ -2,6 +2,56 @@
 import { lugares } from "../data/lugares"
 import { personas } from "../data/personas"
 
+const espaciosPorLugar = {
+  Museo: [
+    "Sala principal",
+    "Sala de talleres",
+    "Auditorio",
+    "Domo",
+    "Patio del museo",
+    "Plaza del museo",
+    "Ingreso al museo",
+    "Otro"
+  ],
+  Bioparque: [
+    "Ingreso al Bioparque",
+    "Casona",
+    "Lago",
+    "Condorera",
+    "Recorrido general",
+    "Aula / taller",
+    "Entrada lateral",
+    "Otro"
+  ],
+  CIIT: [
+    "Sala CIIT",
+    "Aula taller",
+    "Espacio interactivo",
+    "Otro"
+  ],
+  "Plaza del museo": [
+    "Sector central",
+    "Sector ingreso",
+    "Sector juegos",
+    "Otro"
+  ],
+  Lago: [
+    "Orilla del lago",
+    "Mirador",
+    "Sendero",
+    "Otro"
+  ],
+  Casona: [
+    "Sala principal",
+    "Galería",
+    "Patio",
+    "Otro"
+  ],
+  Otro: [
+    "A definir"
+  ]
+}
+
 export default function Actividades({ actividades, setActividades, extras }) {
   const agentes = [...personas, ...extras]
 
@@ -14,18 +64,64 @@ export default function Actividades({ actividades, setActividades, extras }) {
         horario: "",
         titulo: "",
         espacio: "Museo",
+        espacioDetalle: "Sala principal",
         responsable: "",
-        apoyo: "",
+        agentes: [],
         observaciones: ""
       }
     ])
   }
 
+  function normalizarAgentes(actividad) {
+    if (Array.isArray(actividad.agentes)) {
+      return actividad.agentes
+    }
+
+    if (actividad.apoyo) {
+      return [actividad.apoyo]
+    }
+
+    return []
+  }
+
   function actualizarActividad(id, campo, valor) {
     setActividades((actual) =>
-      actual.map((actividad) =>
-        actividad.id === id ? { ...actividad, [campo]: valor } : actividad
-      )
+      actual.map((actividad) => {
+        if (actividad.id !== id) return actividad
+
+        if (campo === "espacio") {
+          const opciones = espaciosPorLugar[valor] || ["A definir"]
+
+          return {
+            ...actividad,
+            espacio: valor,
+            espacioDetalle: opciones[0]
+          }
+        }
+
+        return { ...actividad, [campo]: valor }
+      })
+    )
+  }
+
+  function cambiarAgenteActividad(id, nombreAgente) {
+    setActividades((actual) =>
+      actual.map((actividad) => {
+        if (actividad.id !== id) return actividad
+
+        const agentesActuales = normalizarAgentes(actividad)
+        const yaExiste = agentesActuales.includes(nombreAgente)
+
+        const nuevosAgentes = yaExiste
+          ? agentesActuales.filter((nombre) => nombre !== nombreAgente)
+          : [...agentesActuales, nombreAgente]
+
+        return {
+          ...actividad,
+          agentes: nuevosAgentes,
+          apoyo: ""
+        }
+      })
     )
   }
 
@@ -49,12 +145,17 @@ export default function Actividades({ actividades, setActividades, extras }) {
 
       <div className="cards-grid">
         {actividades.map((actividad, index) => {
+          const agentesActividad = normalizarAgentes(actividad)
+
           const cargada = Boolean(
             actividad.titulo?.trim() ||
             actividad.horario?.trim() ||
             actividad.responsable?.trim() ||
             actividad.observaciones?.trim()
           )
+
+          const opcionesEspacioDetalle =
+            espaciosPorLugar[actividad.espacio] || ["A definir"]
 
           return (
             <article
@@ -111,17 +212,20 @@ export default function Actividades({ actividades, setActividades, extras }) {
                   </label>
 
                   <label>
-                    Responsable
+                    Espacio
                     <select
-                      value={actividad.responsable}
+                      value={actividad.espacioDetalle || opcionesEspacioDetalle[0]}
                       onChange={(e) =>
-                        actualizarActividad(actividad.id, "responsable", e.target.value)
+                        actualizarActividad(
+                          actividad.id,
+                          "espacioDetalle",
+                          e.target.value
+                        )
                       }
                     >
-                      <option value="">-</option>
-                      {agentes.map((persona) => (
-                        <option key={persona.id} value={persona.nombre}>
-                          {persona.nombre}
+                      {opcionesEspacioDetalle.map((espacio) => (
+                        <option key={espacio} value={espacio}>
+                          {espacio}
                         </option>
                       ))}
                     </select>
@@ -141,11 +245,15 @@ export default function Actividades({ actividades, setActividades, extras }) {
                   </label>
 
                   <label>
-                    Apoyo
+                    Responsable
                     <select
-                      value={actividad.apoyo || ""}
+                      value={actividad.responsable}
                       onChange={(e) =>
-                        actualizarActividad(actividad.id, "apoyo", e.target.value)
+                        actualizarActividad(
+                          actividad.id,
+                          "responsable",
+                          e.target.value
+                        )
                       }
                     >
                       <option value="">-</option>
@@ -156,6 +264,32 @@ export default function Actividades({ actividades, setActividades, extras }) {
                       ))}
                     </select>
                   </label>
+                </div>
+
+                <div className="selector-agentes">
+                  <div className="selector-agentes-head">
+                    <span>Agentes de la actividad</span>
+                    <strong>{agentesActividad.length}</strong>
+                  </div>
+
+                  <div className="agentes-checks">
+                    {agentes.map((persona) => {
+                      const activo = agentesActividad.includes(persona.nombre)
+
+                      return (
+                        <button
+                          key={persona.id}
+                          type="button"
+                          className={activo ? "agente-chip activo" : "agente-chip"}
+                          onClick={() =>
+                            cambiarAgenteActividad(actividad.id, persona.nombre)
+                          }
+                        >
+                          {persona.nombre}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 <label>

@@ -1,7 +1,12 @@
 ﻿import { fechas } from "../data/fechas"
 import { personas } from "../data/personas"
+import { seguridad } from "../data/seguridad"
 
-export default function Disponibilidad({ disponibilidad, setDisponibilidad }) {
+export default function Disponibilidad({
+  disponibilidad,
+  setDisponibilidad,
+  extras = []
+}) {
   function cambiarDisponibilidad(personaId, fechaId) {
     setDisponibilidad((actual) => {
       const persona = actual[personaId] || {}
@@ -16,11 +21,23 @@ export default function Disponibilidad({ disponibilidad, setDisponibilidad }) {
     })
   }
 
+  const seguridadComoPersonas = seguridad.map((agente) => ({
+    ...agente,
+    area: "Seguridad"
+  }))
+
+  const todasLasPersonas = [
+    ...personas,
+    ...seguridadComoPersonas,
+    ...extras
+  ]
+
   const grupos = [
     { nombre: "Museo", clase: "museo" },
     { nombre: "Bioparque", clase: "bioparque" },
     { nombre: "CIIT", clase: "ciit" },
-    { nombre: "Coordinación", clase: "coordinacion" }
+    { nombre: "Coordinación", clase: "coordinacion" },
+    { nombre: "Seguridad", clase: "seguridad" }
   ]
 
   return (
@@ -31,31 +48,36 @@ export default function Disponibilidad({ disponibilidad, setDisponibilidad }) {
       </header>
 
       <div className="disponibilidad-lista">
-        {grupos.map((grupo) => (
-          <article key={grupo.nombre} className={`modulo-card ${grupo.clase}`}>
-            <div className="modulo-lateral sin-numero">
-              <span>{grupo.nombre}</span>
-            </div>
+        {grupos.map((grupo) => {
+          const personasDelGrupo = todasLasPersonas.filter(
+            (persona) => persona.area === grupo.nombre
+          )
 
-            <div className="modulo-contenido">
-              <div className="tabla-scroll tabla-moderna">
-                <table className="tabla">
-                  <thead>
-                    <tr>
-                      <th>Agente</th>
-                      {fechas.map((fecha) => (
-                        <th key={fecha.id}>
-                          <span>{fecha.etiqueta}</span>
-                          <small>{fecha.dia}</small>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
+          if (personasDelGrupo.length === 0) return null
 
-                  <tbody>
-                    {personas
-                      .filter((persona) => persona.area === grupo.nombre)
-                      .map((persona) => (
+          return (
+            <article key={grupo.nombre} className={`modulo-card ${grupo.clase}`}>
+              <div className="modulo-lateral sin-numero">
+                <span>{grupo.nombre}</span>
+              </div>
+
+              <div className="modulo-contenido">
+                <div className="tabla-scroll tabla-moderna">
+                  <table className="tabla">
+                    <thead>
+                      <tr>
+                        <th>Agente</th>
+                        {fechas.map((fecha) => (
+                          <th key={fecha.id}>
+                            <span>{fecha.etiqueta}</span>
+                            <small>{fecha.dia}</small>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {personasDelGrupo.map((persona) => (
                         <tr key={persona.id}>
                           <td>
                             <strong>{persona.nombre}</strong>
@@ -79,12 +101,13 @@ export default function Disponibilidad({ disponibilidad, setDisponibilidad }) {
                           })}
                         </tr>
                       ))}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          )
+        })}
       </div>
     </section>
   )
