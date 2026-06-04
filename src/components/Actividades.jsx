@@ -11,6 +11,7 @@ const espaciosPorLugar = {
     "Sala varieté",
     "Salas de arriba",
     "SUM",
+    "Exterior",
     "Otro"
   ],
   Bioparque: [
@@ -53,7 +54,11 @@ const espaciosPorLugar = {
 }
 
 export default function Actividades({ actividades, setActividades, extras }) {
-  const agentes = [...personas, ...extras]
+  const agentes = [...personas, ...extras].filter(
+    (persona, index, array) =>
+      persona?.nombre &&
+      array.findIndex((item) => item.nombre === persona.nombre) === index
+  )
 
   function agregarActividad() {
     setActividades((actual) => [
@@ -274,7 +279,10 @@ export default function Actividades({ actividades, setActividades, extras }) {
                         agregarResponsable(actividad.id, e.target.value)
                       }
                     >
-                      <option value="">Agregar responsable</option>
+                      <option value="" disabled hidden>
+                        Seleccionar
+                      </option>
+
                       {agentesDisponibles.map((persona) => (
                         <option key={persona.id} value={persona.nombre}>
                           {persona.nombre}
