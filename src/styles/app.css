@@ -2591,3 +2591,37 @@ textarea {
     padding: 8px 10px;
   }
 }
+
+/* Organización: pantallas internas */
+
+.pantalla-organizacion {
+  display: grid;
+  gap: 18px;
+}
+
+.pantalla-organizacion > .seccion-infografia {
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.pantalla-organizacion .seccion-header {
+  display: none;
+}
+
+.organizacion-tabs-home {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 900px) {
+  .organizacion-tabs-home {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .organizacion-tabs-home {
+    grid-template-columns: 1fr;
+  }
+}

@@ -15,7 +15,7 @@ export default function Organizacion({
   extras,
   setExtras
 }) {
-  const [seccion, setSeccion] = useState("actividades")
+  const [seccion, setSeccion] = useState(null)
 
   const items = [
     { id: "actividades", label: "Actividades", icono: "★" },
@@ -23,6 +23,70 @@ export default function Organizacion({
     { id: "extras", label: "Horas extras", icono: "+" },
     { id: "disponibilidad", label: "Disponibilidad", icono: "✓" }
   ]
+
+  function volver() {
+    setSeccion(null)
+  }
+
+  if (seccion === "actividades") {
+    return (
+      <section className="pantalla-organizacion">
+        <button className="volver-cronograma" onClick={volver}>
+          ← Organización
+        </button>
+
+        <Actividades
+          actividades={actividades}
+          setActividades={setActividades}
+          extras={extras}
+        />
+      </section>
+    )
+  }
+
+  if (seccion === "guardias") {
+    return (
+      <section className="pantalla-organizacion">
+        <button className="volver-cronograma" onClick={volver}>
+          ← Organización
+        </button>
+
+        <Guardias
+          guardias={guardias}
+          setGuardias={setGuardias}
+          extras={extras}
+        />
+      </section>
+    )
+  }
+
+  if (seccion === "extras") {
+    return (
+      <section className="pantalla-organizacion">
+        <button className="volver-cronograma" onClick={volver}>
+          ← Organización
+        </button>
+
+        <HorasExtras extras={extras} setExtras={setExtras} />
+      </section>
+    )
+  }
+
+  if (seccion === "disponibilidad") {
+    return (
+      <section className="pantalla-organizacion">
+        <button className="volver-cronograma" onClick={volver}>
+          ← Organización
+        </button>
+
+        <Disponibilidad
+          disponibilidad={disponibilidad}
+          setDisponibilidad={setDisponibilidad}
+          extras={extras}
+        />
+      </section>
+    )
+  }
 
   return (
     <section className="organizacion-page">
@@ -33,11 +97,11 @@ export default function Organizacion({
         </div>
       </header>
 
-      <nav className="organizacion-tabs">
+      <nav className="organizacion-tabs organizacion-tabs-home">
         {items.map((item) => (
           <button
             key={item.id}
-            className={seccion === item.id ? "org-tab activa" : "org-tab"}
+            className="org-tab"
             onClick={() => setSeccion(item.id)}
           >
             <span>{item.icono}</span>
@@ -45,36 +109,6 @@ export default function Organizacion({
           </button>
         ))}
       </nav>
-
-      <div className="organizacion-contenido">
-        {seccion === "actividades" && (
-          <Actividades
-            actividades={actividades}
-            setActividades={setActividades}
-            extras={extras}
-          />
-        )}
-
-        {seccion === "guardias" && (
-          <Guardias
-            guardias={guardias}
-            setGuardias={setGuardias}
-            extras={extras}
-          />
-        )}
-
-        {seccion === "extras" && (
-          <HorasExtras extras={extras} setExtras={setExtras} />
-        )}
-
-        {seccion === "disponibilidad" && (
-          <Disponibilidad
-            disponibilidad={disponibilidad}
-            setDisponibilidad={setDisponibilidad}
-            extras={extras}
-          />
-        )}
-      </div>
     </section>
   )
 }

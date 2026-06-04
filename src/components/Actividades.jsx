@@ -4,13 +4,13 @@ import { personas } from "../data/personas"
 
 const espaciosPorLugar = {
   Museo: [
-    "Sala principal",
-    "Sala de talleres",
-    "Auditorio",
-    "Domo",
-    "Patio del museo",
-    "Plaza del museo",
-    "Ingreso al museo",
+    "Salas abajo",
+    "Recepción",
+    "Ludoteca",
+    "Sala de ingenio",
+    "Sala varieté",
+    "Salas de arriba",
+    "SUM",
     "Otro"
   ],
   Bioparque: [
@@ -64,7 +64,7 @@ export default function Actividades({ actividades, setActividades, extras }) {
         horario: "",
         titulo: "",
         espacio: "Museo",
-        espacioDetalle: "Sala principal",
+        espacioDetalle: "Salas abajo",
         responsable: "",
         agentes: [],
         observaciones: ""
@@ -73,14 +73,8 @@ export default function Actividades({ actividades, setActividades, extras }) {
   }
 
   function normalizarAgentes(actividad) {
-    if (Array.isArray(actividad.agentes)) {
-      return actividad.agentes
-    }
-
-    if (actividad.apoyo) {
-      return [actividad.apoyo]
-    }
-
+    if (Array.isArray(actividad.agentes)) return actividad.agentes
+    if (actividad.apoyo) return [actividad.apoyo]
     return []
   }
 
