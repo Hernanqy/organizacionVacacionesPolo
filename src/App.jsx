@@ -48,39 +48,99 @@ export default function App() {
     guardarLS("polo-extras", extras)
   }, [extras])
 
-  async function actualizarDesdeFirebase() {
+  function aplicarDatosFirebase(datos) {
+    if (!datos) return
+
+    setDisponibilidad(datos.disponibilidad || {})
+    setActividades(datos.actividades || actividadesBase)
+    setGuardias(datos.guardias || {})
+    setExtras(datos.extras || [])
+
+    guardarLS("polo-disponibilidad", datos.disponibilidad || {})
+    guardarLS("polo-actividades", datos.actividades || actividadesBase)
+    guardarLS("polo-guardias", datos.guardias || {})
+    guardarLS("polo-extras", datos.extras || [])
+  }
+
+  async function actualizarDesdeFirebase({ silencioso = false, forzar = false } = {}) {
+    if (!forzar && vista !== "resumen") return
+
+    try {
+      if (!silencioso) {
+        setEstadoSync("Actualizando...")
+      }
+
+      const datos = await cargarOrganizacion()
+
+      if (!datos) {
+        if (!silencioso) setEstadoSync("Sin datos")
+        return
+      }
+
+      aplicarDatosFirebase(datos)
+
+      setEstadoSync(silencioso ? "Actualizado" : "Sincronizado")
+    } catch (error) {
+      console.error(error)
+      if (!silencioso) {
+        setEstadoSync("Error al actualizar")
+      }
+    }
+  }
+
+  async function actualizarManual() {
     const confirmar = confirm(
       "Esto traerá la última versión guardada en Firebase. Si tenés cambios sin guardar, podrían reemplazarse. ¿Continuar?"
     )
 
     if (!confirmar) return
 
-    try {
-      setEstadoSync("Actualizando...")
-
-      const datos = await cargarOrganizacion()
-
-      if (!datos) {
-        setEstadoSync("Sin datos")
-        return
-      }
-
-      setDisponibilidad(datos.disponibilidad || {})
-      setActividades(datos.actividades || actividadesBase)
-      setGuardias(datos.guardias || {})
-      setExtras(datos.extras || [])
-
-      guardarLS("polo-disponibilidad", datos.disponibilidad || {})
-      guardarLS("polo-actividades", datos.actividades || actividadesBase)
-      guardarLS("polo-guardias", datos.guardias || {})
-      guardarLS("polo-extras", datos.extras || [])
-
-      setEstadoSync("Actualizado")
-    } catch (error) {
-      console.error(error)
-      setEstadoSync("Error al actualizar")
-    }
+    await actualizarDesdeFirebase({ silencioso: false, forzar: true })
   }
+
+  useEffect(() => {
+    actualizarDesdeFirebase({ silencioso: true, forzar: true })
+  }, [])
+
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      if (vista === "resumen" && document.visibilityState === "visible") {
+        actualizarDesdeFirebase({ silencioso: true })
+      }
+    }, 60000)
+
+    return () => clearInterval(intervalo)
+  }, [vista])
+
+  useEffect(() => {
+    function alVolverVisible() {
+      if (document.visibilityState === "visible" && vista === "resumen") {
+        actualizarDesdeFirebase({ silencioso: true })
+      }
+    }
+
+    function alVolverAFoco() {
+      if (vista === "resumen") {
+        actualizarDesdeFirebase({ silencioso: true })
+      }
+    }
+
+    function alVolverDesdeCelular() {
+      if (vista === "resumen") {
+        actualizarDesdeFirebase({ silencioso: true })
+      }
+    }
+
+    document.addEventListener("visibilitychange", alVolverVisible)
+    window.addEventListener("focus", alVolverAFoco)
+    window.addEventListener("pageshow", alVolverDesdeCelular)
+
+    return () => {
+      document.removeEventListener("visibilitychange", alVolverVisible)
+      window.removeEventListener("focus", alVolverAFoco)
+      window.removeEventListener("pageshow", alVolverDesdeCelular)
+    }
+  }, [vista])
 
   async function guardarAhora() {
     try {
@@ -132,7 +192,7 @@ export default function App() {
         <div className="hero-actions">
           <span className="sync-pill">{estadoSync}</span>
 
-          <button className="boton-secundario" onClick={actualizarDesdeFirebase}>
+          <button className="boton-secundario" onClick={actualizarManual}>
             Actualizar
           </button>
 

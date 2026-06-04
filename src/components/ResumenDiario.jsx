@@ -85,18 +85,18 @@ export default function ResumenDiario({ actividades, guardias }) {
         <div className="cronograma-dia-numero">
           <strong>{fecha.etiqueta}</strong>
           <span>{fecha.dia}</span>
-        </div>
 
-        <div className="cronograma-dia-horarios">
-          <article>
-            <small>Público</small>
-            <strong>{fecha.publico}</strong>
-          </article>
+          <div className="cronograma-dia-mini-datos">
+            <article>
+              <small>Público</small>
+              <b>{fecha.publico}</b>
+            </article>
 
-          <article>
-            <small>Personal</small>
-            <strong>{fecha.personal}</strong>
-          </article>
+            <article>
+              <small>Personal</small>
+              <b>{fecha.personal}</b>
+            </article>
+          </div>
         </div>
       </header>
 

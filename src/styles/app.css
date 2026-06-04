@@ -2335,3 +2335,135 @@ textarea {
     font-size: 11px !important;
   }
 }
+
+/* ACTIVIDADES: labels vs texto cargado */
+
+.form-card label,
+.seguridad-dia-card label {
+  color: #5d6a64;
+  font-weight: 900;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.form-card input,
+.form-card select,
+.form-card textarea,
+.extra-principal input,
+.extra-principal select,
+.seguridad-dia-card select {
+  color: #176b73;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.form-card input::placeholder,
+.form-card textarea::placeholder {
+  color: #97aaa2;
+  font-weight: 700;
+}
+
+.form-card textarea {
+  color: #1f5f67;
+}
+
+.form-card.actividad-cargada {
+  box-shadow: 0 18px 42px rgba(23, 138, 84, .10);
+  border: 1px solid rgba(23, 138, 84, .12);
+}
+
+.form-numero.verde {
+  background: linear-gradient(135deg, #49c96b 0%, #1f9d55 100%);
+}
+
+.form-numero.azul,
+.form-numero.verde {
+  font-size: 48px;
+  letter-spacing: -.06em;
+}
+
+.form-numero.verde::after {
+  content: "cargada";
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .9;
+}
+
+@media (max-width: 620px) {
+  .form-card label,
+  .seguridad-dia-card label {
+    font-size: 12px;
+  }
+
+  .form-card input,
+  .form-card select,
+  .form-card textarea,
+  .extra-principal input,
+  .extra-principal select,
+  .seguridad-dia-card select {
+    font-size: 18px;
+  }
+
+  .form-numero.azul,
+  .form-numero.verde {
+    font-size: 42px;
+  }
+
+  .form-numero.verde::after {
+    font-size: 10px;
+  }
+}
+
+/* Horarios dentro del cuadro de fecha */
+
+.cronograma-dia-header {
+  grid-template-columns: 1fr;
+}
+
+.cronograma-dia-numero {
+  min-height: 230px;
+}
+
+.cronograma-dia-mini-datos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.cronograma-dia-mini-datos article {
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.18);
+}
+
+.cronograma-dia-mini-datos small {
+  display: block;
+  margin-bottom: 4px;
+  color: rgba(255,255,255,.82);
+  font-size: 11px;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.cronograma-dia-mini-datos b {
+  color: white;
+  font-size: 24px;
+  line-height: .95;
+  letter-spacing: -.04em;
+}
+
+@media (max-width: 560px) {
+  .cronograma-dia-numero {
+    min-height: 210px;
+  }
+
+  .cronograma-dia-mini-datos b {
+    font-size: 20px;
+  }
+}
