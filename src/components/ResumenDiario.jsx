@@ -24,9 +24,9 @@ export default function ResumenDiario({ actividades, guardias }) {
 
   const fecha = fechas.find((item) => item.id === fechaActiva)
 
-  function obtenerAgentes(actividad) {
-    if (Array.isArray(actividad.agentes)) return actividad.agentes
-    if (actividad.apoyo) return [actividad.apoyo]
+  function obtenerResponsables(actividad) {
+    if (Array.isArray(actividad.responsables)) return actividad.responsables
+    if (actividad.responsable) return [actividad.responsable]
     return []
   }
 
@@ -118,7 +118,7 @@ export default function ResumenDiario({ actividades, guardias }) {
           ) : (
             <div className="cronograma-agenda">
               {actividadesDelDia.map((actividad) => {
-                const agentesActividad = obtenerAgentes(actividad)
+                const responsablesActividad = obtenerResponsables(actividad)
 
                 return (
                   <article key={actividad.id} className="cronograma-actividad">
@@ -136,12 +136,8 @@ export default function ResumenDiario({ actividades, guardias }) {
                           <span>{actividad.espacioDetalle}</span>
                         )}
 
-                        {actividad.responsable && (
-                          <span>Resp. {actividad.responsable}</span>
-                        )}
-
-                        {agentesActividad.map((agente) => (
-                          <span key={agente}>{agente}</span>
+                        {responsablesActividad.map((responsable) => (
+                          <span key={responsable}>Resp. {responsable}</span>
                         ))}
                       </div>
 

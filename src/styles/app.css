@@ -2625,3 +2625,37 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* Responsables seleccionados */
+
+.responsables-seleccionados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.responsables-seleccionados button {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  color: white;
+  background: linear-gradient(135deg, #25c7bd 0%, #168aad 100%);
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 10px 22px rgba(22, 138, 173, .22);
+}
+
+.responsables-seleccionados button span {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255,255,255,.25);
+  font-size: 15px;
+  line-height: 1;
+}

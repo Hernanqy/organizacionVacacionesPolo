@@ -65,16 +65,21 @@ export default function Actividades({ actividades, setActividades, extras }) {
         titulo: "",
         espacio: "Museo",
         espacioDetalle: "Salas abajo",
-        responsable: "",
-        agentes: [],
+        responsables: [],
         observaciones: ""
       }
     ])
   }
 
-  function normalizarAgentes(actividad) {
-    if (Array.isArray(actividad.agentes)) return actividad.agentes
-    if (actividad.apoyo) return [actividad.apoyo]
+  function normalizarResponsables(actividad) {
+    if (Array.isArray(actividad.responsables)) {
+      return actividad.responsables
+    }
+
+    if (actividad.responsable) {
+      return [actividad.responsable]
+    }
+
     return []
   }
 
@@ -98,22 +103,41 @@ export default function Actividades({ actividades, setActividades, extras }) {
     )
   }
 
-  function cambiarAgenteActividad(id, nombreAgente) {
+  function agregarResponsable(id, nombreResponsable) {
+    if (!nombreResponsable) return
+
     setActividades((actual) =>
       actual.map((actividad) => {
         if (actividad.id !== id) return actividad
 
-        const agentesActuales = normalizarAgentes(actividad)
-        const yaExiste = agentesActuales.includes(nombreAgente)
+        const responsablesActuales = normalizarResponsables(actividad)
 
-        const nuevosAgentes = yaExiste
-          ? agentesActuales.filter((nombre) => nombre !== nombreAgente)
-          : [...agentesActuales, nombreAgente]
+        if (responsablesActuales.includes(nombreResponsable)) {
+          return actividad
+        }
 
         return {
           ...actividad,
-          agentes: nuevosAgentes,
-          apoyo: ""
+          responsables: [...responsablesActuales, nombreResponsable],
+          responsable: ""
+        }
+      })
+    )
+  }
+
+  function quitarResponsable(id, nombreResponsable) {
+    setActividades((actual) =>
+      actual.map((actividad) => {
+        if (actividad.id !== id) return actividad
+
+        const responsablesActuales = normalizarResponsables(actividad)
+
+        return {
+          ...actividad,
+          responsables: responsablesActuales.filter(
+            (nombre) => nombre !== nombreResponsable
+          ),
+          responsable: ""
         }
       })
     )
@@ -139,17 +163,21 @@ export default function Actividades({ actividades, setActividades, extras }) {
 
       <div className="cards-grid">
         {actividades.map((actividad, index) => {
-          const agentesActividad = normalizarAgentes(actividad)
+          const responsablesActividad = normalizarResponsables(actividad)
 
           const cargada = Boolean(
             actividad.titulo?.trim() ||
             actividad.horario?.trim() ||
-            actividad.responsable?.trim() ||
+            responsablesActividad.length > 0 ||
             actividad.observaciones?.trim()
           )
 
           const opcionesEspacioDetalle =
             espaciosPorLugar[actividad.espacio] || ["A definir"]
+
+          const agentesDisponibles = agentes.filter(
+            (persona) => !responsablesActividad.includes(persona.nombre)
+          )
 
           return (
             <article
@@ -241,17 +269,13 @@ export default function Actividades({ actividades, setActividades, extras }) {
                   <label>
                     Responsable
                     <select
-                      value={actividad.responsable}
+                      value=""
                       onChange={(e) =>
-                        actualizarActividad(
-                          actividad.id,
-                          "responsable",
-                          e.target.value
-                        )
+                        agregarResponsable(actividad.id, e.target.value)
                       }
                     >
-                      <option value="">-</option>
-                      {agentes.map((persona) => (
+                      <option value="">Agregar responsable</option>
+                      {agentesDisponibles.map((persona) => (
                         <option key={persona.id} value={persona.nombre}>
                           {persona.nombre}
                         </option>
@@ -260,31 +284,20 @@ export default function Actividades({ actividades, setActividades, extras }) {
                   </label>
                 </div>
 
-                <div className="selector-agentes">
-                  <div className="selector-agentes-head">
-                    <span>Agentes de la actividad</span>
-                    <strong>{agentesActividad.length}</strong>
+                {responsablesActividad.length > 0 && (
+                  <div className="responsables-seleccionados">
+                    {responsablesActividad.map((nombre) => (
+                      <button
+                        key={nombre}
+                        type="button"
+                        onClick={() => quitarResponsable(actividad.id, nombre)}
+                      >
+                        {nombre}
+                        <span>×</span>
+                      </button>
+                    ))}
                   </div>
-
-                  <div className="agentes-checks">
-                    {agentes.map((persona) => {
-                      const activo = agentesActividad.includes(persona.nombre)
-
-                      return (
-                        <button
-                          key={persona.id}
-                          type="button"
-                          className={activo ? "agente-chip activo" : "agente-chip"}
-                          onClick={() =>
-                            cambiarAgenteActividad(actividad.id, persona.nombre)
-                          }
-                        >
-                          {persona.nombre}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
+                )}
 
                 <label>
                   Nota
