@@ -48,135 +48,139 @@ export default function Actividades({ actividades, setActividades, extras }) {
       </div>
 
       <div className="cards-grid">
-        {actividades.map((actividad, index) => (
-          <article key={actividad.id} className="form-card actividad">
-            <div className="form-numero azul">
-              {String(index + 1).padStart(2, "0")}
-            </div>
+        {actividades.map((actividad, index) => {
+          const cargada = Boolean(
+            actividad.titulo?.trim() ||
+            actividad.horario?.trim() ||
+            actividad.responsable?.trim() ||
+            actividad.observaciones?.trim()
+          )
 
-            <div className="form-cuerpo">
-              <div className="grid-form">
-                <label>
-                  Día
-                  <select
-                    value={actividad.fechaId}
-                    onChange={(e) =>
-                      actualizarActividad(actividad.id, "fechaId", e.target.value)
-                    }
-                  >
-                    {fechas.map((fecha) => (
-                      <option key={fecha.id} value={fecha.id}>
-                        {fecha.etiqueta} · {fecha.dia}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+          return (
+            <article
+              key={actividad.id}
+              className={cargada ? "form-card actividad actividad-cargada" : "form-card actividad"}
+            >
+              <div className={cargada ? "form-numero verde" : "form-numero azul"}>
+                {`A${index + 1}`}
+              </div>
+
+              <div className="form-cuerpo">
+                <div className="grid-form">
+                  <label>
+                    Día
+                    <select
+                      value={actividad.fechaId}
+                      onChange={(e) =>
+                        actualizarActividad(actividad.id, "fechaId", e.target.value)
+                      }
+                    >
+                      {fechas.map((fecha) => (
+                        <option key={fecha.id} value={fecha.id}>
+                          {fecha.etiqueta} · {fecha.dia}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    Hora
+                    <input
+                      value={actividad.horario}
+                      placeholder="14:00"
+                      onChange={(e) =>
+                        actualizarActividad(actividad.id, "horario", e.target.value)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Lugar
+                    <select
+                      value={actividad.espacio}
+                      onChange={(e) =>
+                        actualizarActividad(actividad.id, "espacio", e.target.value)
+                      }
+                    >
+                      {lugares.map((lugar) => (
+                        <option key={lugar} value={lugar}>
+                          {lugar}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    Responsable
+                    <select
+                      value={actividad.responsable}
+                      onChange={(e) =>
+                        actualizarActividad(actividad.id, "responsable", e.target.value)
+                      }
+                    >
+                      <option value="">-</option>
+                      {agentes.map((persona) => (
+                        <option key={persona.id} value={persona.nombre}>
+                          {persona.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="grid-form dos">
+                  <label>
+                    Actividad
+                    <input
+                      value={actividad.titulo}
+                      placeholder="Nombre"
+                      onChange={(e) =>
+                        actualizarActividad(actividad.id, "titulo", e.target.value)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Apoyo
+                    <select
+                      value={actividad.apoyo || ""}
+                      onChange={(e) =>
+                        actualizarActividad(actividad.id, "apoyo", e.target.value)
+                      }
+                    >
+                      <option value="">-</option>
+                      {agentes.map((persona) => (
+                        <option key={persona.id} value={persona.nombre}>
+                          {persona.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
 
                 <label>
-                  Hora
-                  <input
-                    value={actividad.horario}
-                    placeholder="14:00"
+                  Nota
+                  <textarea
+                    value={actividad.observaciones}
+                    placeholder="Opcional"
                     onChange={(e) =>
-                      actualizarActividad(actividad.id, "horario", e.target.value)
+                      actualizarActividad(actividad.id, "observaciones", e.target.value)
                     }
                   />
                 </label>
 
-                <label>
-                  Lugar
-                  <select
-                    value={actividad.espacio}
-                    onChange={(e) =>
-                      actualizarActividad(actividad.id, "espacio", e.target.value)
-                    }
+                <div className="acciones-tarjeta">
+                  <button
+                    className="boton-mini"
+                    onClick={() => eliminarActividad(actividad.id)}
                   >
-                    {lugares.map((lugar) => (
-                      <option key={lugar} value={lugar}>
-                        {lugar}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  Responsable
-                  <select
-                    value={actividad.responsable}
-                    onChange={(e) =>
-                      actualizarActividad(
-                        actividad.id,
-                        "responsable",
-                        e.target.value
-                      )
-                    }
-                  >
-                    <option value="">-</option>
-                    {agentes.map((persona) => (
-                      <option key={persona.id} value={persona.nombre}>
-                        {persona.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    Eliminar
+                  </button>
+                </div>
               </div>
-
-              <div className="grid-form dos">
-                <label>
-                  Actividad
-                  <input
-                    value={actividad.titulo}
-                    placeholder="Nombre"
-                    onChange={(e) =>
-                      actualizarActividad(actividad.id, "titulo", e.target.value)
-                    }
-                  />
-                </label>
-
-                <label>
-                  Apoyo
-                  <select
-                    value={actividad.apoyo || ""}
-                    onChange={(e) =>
-                      actualizarActividad(actividad.id, "apoyo", e.target.value)
-                    }
-                  >
-                    <option value="">-</option>
-                    {agentes.map((persona) => (
-                      <option key={persona.id} value={persona.nombre}>
-                        {persona.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <label>
-                Nota
-                <textarea
-                  value={actividad.observaciones}
-                  placeholder="Opcional"
-                  onChange={(e) =>
-                    actualizarActividad(
-                      actividad.id,
-                      "observaciones",
-                      e.target.value
-                    )
-                  }
-                />
-              </label>
-
-              <div className="acciones-tarjeta">
-                <button
-                  className="boton-mini"
-                  onClick={() => eliminarActividad(actividad.id)}
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          )
+        })}
       </div>
     </section>
   )
