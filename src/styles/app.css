@@ -2659,3 +2659,25 @@ textarea {
   font-size: 15px;
   line-height: 1;
 }
+
+/* Responsive: ocultar estado y actualizar */
+
+@media (max-width: 620px) {
+  .sync-pill {
+    display: none !important;
+  }
+
+  .hero-actions button:first-of-type {
+    display: none !important;
+  }
+}
+
+/* Quitar Polo La Máxima sobre Cronograma */
+
+.cronograma-infografia-header span {
+  display: none !important;
+}
+
+.cronograma-infografia-header {
+  margin-bottom: 24px;
+}
