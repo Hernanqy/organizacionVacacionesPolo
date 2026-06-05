@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react"
+﻿import { useEffect, useState } from "react"
 import "./styles/app.css"
 
 import MenuPrincipal from "./components/MenuPrincipal"
@@ -14,7 +14,7 @@ import {
 
 export default function App() {
   const [vista, setVista] = useState("resumen")
-  const [estadoSync, setEstadoSync] = useState("")
+  const [estadoSync, setEstadoSync] = useState("Listo")
 
   const [disponibilidad, setDisponibilidad] = useState(() =>
     leerLS("polo-disponibilidad", {})
@@ -31,10 +31,6 @@ export default function App() {
   const [extras, setExtras] = useState(() =>
     leerLS("polo-extras", [])
   )
-
-  const cargaInicialLista = useRef(false)
-  const aplicandoDatosFirebase = useRef(false)
-  const temporizadorGuardado = useRef(null)
 
   useEffect(() => {
     guardarLS("polo-disponibilidad", disponibilidad)
@@ -55,8 +51,6 @@ export default function App() {
   function aplicarDatosFirebase(datos) {
     if (!datos) return
 
-    aplicandoDatosFirebase.current = true
-
     setDisponibilidad(datos.disponibilidad || {})
     setActividades(datos.actividades || actividadesBase)
     setGuardias(datos.guardias || {})
@@ -66,56 +60,52 @@ export default function App() {
     guardarLS("polo-actividades", datos.actividades || actividadesBase)
     guardarLS("polo-guardias", datos.guardias || {})
     guardarLS("polo-extras", datos.extras || [])
-
-    setTimeout(() => {
-      aplicandoDatosFirebase.current = false
-    }, 500)
   }
 
-  async function actualizarAutomaticamente() {
-    if (vista !== "resumen") return
+  async function actualizarDesdeFirebase({ silencioso = false, forzar = false } = {}) {
+    if (!forzar && vista !== "resumen") return
 
     try {
+      if (!silencioso) {
+        setEstadoSync("Actualizando...")
+      }
+
       const datos = await cargarOrganizacion()
 
-      if (datos) {
-        aplicarDatosFirebase(datos)
+      if (!datos) {
+        if (!silencioso) setEstadoSync("Sin datos")
+        return
       }
+
+      aplicarDatosFirebase(datos)
+
+      setEstadoSync(silencioso ? "Actualizado" : "Sincronizado")
     } catch (error) {
-      console.error("No se pudo actualizar automáticamente:", error)
+      console.error(error)
+      if (!silencioso) {
+        setEstadoSync("Error al actualizar")
+      }
     }
   }
 
+  async function actualizarManual() {
+    const confirmar = confirm(
+      "Esto traerá la última versión guardada en Firebase. Si tenés cambios sin guardar, podrían reemplazarse. ¿Continuar?"
+    )
+
+    if (!confirmar) return
+
+    await actualizarDesdeFirebase({ silencioso: false, forzar: true })
+  }
+
   useEffect(() => {
-    async function actualizarAlAbrir() {
-      try {
-        const datos = await cargarOrganizacion()
-
-        if (datos) {
-          aplicarDatosFirebase(datos)
-        }
-      } catch (error) {
-        console.error("No se pudo actualizar al abrir:", error)
-      } finally {
-        setTimeout(() => {
-          cargaInicialLista.current = true
-        }, 700)
-      }
-    }
-
-    actualizarAlAbrir()
+    actualizarDesdeFirebase({ silencioso: true, forzar: true })
   }, [])
-
-  useEffect(() => {
-    if (vista === "resumen") {
-      actualizarAutomaticamente()
-    }
-  }, [vista])
 
   useEffect(() => {
     const intervalo = setInterval(() => {
       if (vista === "resumen" && document.visibilityState === "visible") {
-        actualizarAutomaticamente()
+        actualizarDesdeFirebase({ silencioso: true })
       }
     }, 60000)
 
@@ -125,19 +115,19 @@ export default function App() {
   useEffect(() => {
     function alVolverVisible() {
       if (document.visibilityState === "visible" && vista === "resumen") {
-        actualizarAutomaticamente()
+        actualizarDesdeFirebase({ silencioso: true })
       }
     }
 
     function alVolverAFoco() {
       if (vista === "resumen") {
-        actualizarAutomaticamente()
+        actualizarDesdeFirebase({ silencioso: true })
       }
     }
 
     function alVolverDesdeCelular() {
       if (vista === "resumen") {
-        actualizarAutomaticamente()
+        actualizarDesdeFirebase({ silencioso: true })
       }
     }
 
@@ -152,44 +142,23 @@ export default function App() {
     }
   }, [vista])
 
-  useEffect(() => {
-    if (!cargaInicialLista.current) return
-    if (aplicandoDatosFirebase.current) return
+  async function guardarAhora() {
+    try {
+      setEstadoSync("Guardando...")
 
-    setEstadoSync("Cambios sin guardar")
+      await guardarOrganizacion({
+        disponibilidad,
+        actividades,
+        guardias,
+        extras
+      })
 
-    if (temporizadorGuardado.current) {
-      clearTimeout(temporizadorGuardado.current)
+      setEstadoSync("Guardado")
+    } catch (error) {
+      console.error(error)
+      setEstadoSync("Error")
     }
-
-    temporizadorGuardado.current = setTimeout(async () => {
-      try {
-        setEstadoSync("Guardando...")
-
-        await guardarOrganizacion({
-          disponibilidad,
-          actividades,
-          guardias,
-          extras
-        })
-
-        setEstadoSync("Guardado automático")
-
-        setTimeout(() => {
-          setEstadoSync("")
-        }, 1800)
-      } catch (error) {
-        console.error(error)
-        setEstadoSync("Error al guardar")
-      }
-    }, 2000)
-
-    return () => {
-      if (temporizadorGuardado.current) {
-        clearTimeout(temporizadorGuardado.current)
-      }
-    }
-  }, [disponibilidad, actividades, guardias, extras])
+  }
 
   function exportarDatos() {
     const datos = {
@@ -217,11 +186,19 @@ export default function App() {
       <header className="hero hero-compacto">
         <div>
           <p className="eyebrow">Polo La Máxima</p>
-          <h1>Invierno 2026</h1>
+          <h1>Vacaciones de Invierno 2026</h1>
         </div>
 
         <div className="hero-actions">
-          {estadoSync && <span className="sync-pill">{estadoSync}</span>}
+          <span className="sync-pill">{estadoSync}</span>
+
+          <button className="boton-secundario" onClick={actualizarManual}>
+            Actualizar
+          </button>
+
+          <button className="boton-secundario" onClick={guardarAhora}>
+            Guardar
+          </button>
 
           <button className="boton-secundario" onClick={exportarDatos}>
             Exportar
