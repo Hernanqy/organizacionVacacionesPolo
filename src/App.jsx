@@ -13,24 +13,69 @@ import {
 } from "./services/poloFirestore"
 
 export default function App() {
-  const [vista, setVista] = useState("resumen")
+  const [vista, setVistaBase] = useState("resumen")
   const [estadoSync, setEstadoSync] = useState("Listo")
+  const [hayCambiosSinGuardar, setHayCambiosSinGuardar] = useState(false)
+  const [cargandoDatos, setCargandoDatos] = useState(true)
 
-  const [disponibilidad, setDisponibilidad] = useState(() =>
+  const [disponibilidad, setDisponibilidadBase] = useState(() =>
     leerLS("polo-disponibilidad", {})
   )
 
-  const [actividades, setActividades] = useState(() =>
+  const [actividades, setActividadesBase] = useState(() =>
     leerLS("polo-actividades", actividadesBase)
   )
 
-  const [guardias, setGuardias] = useState(() =>
+  const [guardias, setGuardiasBase] = useState(() =>
     leerLS("polo-guardias", {})
   )
 
-  const [extras, setExtras] = useState(() =>
+  const [extras, setExtrasBase] = useState(() =>
     leerLS("polo-extras", [])
   )
+
+  function marcarCambio() {
+    if (!cargandoDatos) {
+      setHayCambiosSinGuardar(true)
+      setEstadoSync("Cambios sin guardar")
+    }
+  }
+
+  function setDisponibilidad(valor) {
+    setDisponibilidadBase(valor)
+    marcarCambio()
+  }
+
+  function setActividades(valor) {
+    setActividadesBase(valor)
+    marcarCambio()
+  }
+
+  function setGuardias(valor) {
+    setGuardiasBase(valor)
+    marcarCambio()
+  }
+
+  function setExtras(valor) {
+    setExtrasBase(valor)
+    marcarCambio()
+  }
+
+  function cambiarVista(nuevaVista) {
+    if (
+      vista === "organizacion" &&
+      nuevaVista !== "organizacion" &&
+      hayCambiosSinGuardar
+    ) {
+      const confirmar = confirm(
+        "Tenés cambios sin guardar. Si salís de Organización, pueden no subirse al cronograma compartido. ¿Salir igual?"
+      )
+
+      if (!confirmar) return
+    }
+
+    setVistaBase(nuevaVista)
+  }
 
   useEffect(() => {
     guardarLS("polo-disponibilidad", disponibilidad)
@@ -48,18 +93,41 @@ export default function App() {
     guardarLS("polo-extras", extras)
   }, [extras])
 
+  useEffect(() => {
+    function advertirSalida(evento) {
+      if (!hayCambiosSinGuardar) return
+
+      evento.preventDefault()
+      evento.returnValue = ""
+    }
+
+    window.addEventListener("beforeunload", advertirSalida)
+
+    return () => {
+      window.removeEventListener("beforeunload", advertirSalida)
+    }
+  }, [hayCambiosSinGuardar])
+
   function aplicarDatosFirebase(datos) {
     if (!datos) return
 
-    setDisponibilidad(datos.disponibilidad || {})
-    setActividades(datos.actividades || actividadesBase)
-    setGuardias(datos.guardias || {})
-    setExtras(datos.extras || [])
+    setCargandoDatos(true)
+
+    setDisponibilidadBase(datos.disponibilidad || {})
+    setActividadesBase(datos.actividades || actividadesBase)
+    setGuardiasBase(datos.guardias || {})
+    setExtrasBase(datos.extras || [])
 
     guardarLS("polo-disponibilidad", datos.disponibilidad || {})
     guardarLS("polo-actividades", datos.actividades || actividadesBase)
     guardarLS("polo-guardias", datos.guardias || {})
     guardarLS("polo-extras", datos.extras || [])
+
+    setHayCambiosSinGuardar(false)
+
+    setTimeout(() => {
+      setCargandoDatos(false)
+    }, 300)
   }
 
   async function actualizarDesdeFirebase({ silencioso = false, forzar = false } = {}) {
@@ -74,6 +142,7 @@ export default function App() {
 
       if (!datos) {
         if (!silencioso) setEstadoSync("Sin datos")
+        setCargandoDatos(false)
         return
       }
 
@@ -82,6 +151,8 @@ export default function App() {
       setEstadoSync(silencioso ? "Actualizado" : "Sincronizado")
     } catch (error) {
       console.error(error)
+      setCargandoDatos(false)
+
       if (!silencioso) {
         setEstadoSync("Error al actualizar")
       }
@@ -89,11 +160,13 @@ export default function App() {
   }
 
   async function actualizarManual() {
-    const confirmar = confirm(
-      "Esto traerá la última versión guardada en Firebase. Si tenés cambios sin guardar, podrían reemplazarse. ¿Continuar?"
-    )
+    if (hayCambiosSinGuardar) {
+      const confirmar = confirm(
+        "Tenés cambios sin guardar. Actualizar traerá la última versión de Firebase y puede reemplazarlos. ¿Continuar?"
+      )
 
-    if (!confirmar) return
+      if (!confirmar) return
+    }
 
     await actualizarDesdeFirebase({ silencioso: false, forzar: true })
   }
@@ -153,6 +226,7 @@ export default function App() {
         extras
       })
 
+      setHayCambiosSinGuardar(false)
       setEstadoSync("Guardado")
     } catch (error) {
       console.error(error)
@@ -189,24 +263,28 @@ export default function App() {
           <h1>Vacaciones de Invierno 2026</h1>
         </div>
 
-        <div className="hero-actions">
-          <span className="sync-pill">{estadoSync}</span>
+        {vista === "organizacion" && (
+          <div className="hero-actions">
+            <span className={hayCambiosSinGuardar ? "sync-pill pendiente" : "sync-pill"}>
+              {estadoSync}
+            </span>
 
-          <button className="boton-secundario" onClick={actualizarManual}>
-            Actualizar
-          </button>
+            <button className="boton-secundario" onClick={actualizarManual}>
+              Actualizar
+            </button>
 
-          <button className="boton-secundario" onClick={guardarAhora}>
-            Guardar
-          </button>
+            <button className="boton-secundario guardar-cambios" onClick={guardarAhora}>
+              Guardar cambios
+            </button>
 
-          <button className="boton-secundario" onClick={exportarDatos}>
-            Exportar
-          </button>
-        </div>
+            <button className="boton-secundario" onClick={exportarDatos}>
+              Exportar
+            </button>
+          </div>
+        )}
       </header>
 
-      <MenuPrincipal vista={vista} setVista={setVista} />
+      <MenuPrincipal vista={vista} setVista={cambiarVista} />
 
       {vista === "resumen" && (
         <ResumenDiario actividades={actividades} guardias={guardias} />
